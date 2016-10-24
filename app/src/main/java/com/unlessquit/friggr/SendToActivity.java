@@ -1,6 +1,5 @@
 package com.unlessquit.friggr;
 
-import android.content.ContentResolver;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.database.Cursor;
@@ -59,7 +58,7 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     public String getPath(Uri uri) {
-        String[] projection = { MediaStore.Images.Media.DATA };
+        String[] projection = {MediaStore.Images.Media.DATA};
         CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
         Cursor cursor = loader.loadInBackground();
         // startManagingCursor(cursor);
@@ -84,6 +83,7 @@ public class SendToActivity extends AppCompatActivity {
 
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
+
         protected Integer doInBackground(String... paths) {
 
             File sourceFile = new File(paths[0]);
