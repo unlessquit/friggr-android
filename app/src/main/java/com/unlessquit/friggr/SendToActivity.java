@@ -2,15 +2,26 @@ package com.unlessquit.friggr;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.IOException;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class SendToActivity extends AppCompatActivity {
 
@@ -48,12 +59,44 @@ public class SendToActivity extends AppCompatActivity {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
             int duration = Toast.LENGTH_LONG;
-
-            Toast toast = Toast.makeText(getApplicationContext(), "Image file: "+ imageUri.getPath(), duration);
+            Toast toast = Toast.makeText(getApplicationContext(), "Image file: " + imageUri.getPath(), duration);
             toast.show();
+            UploadImageTask uploadTask = new UploadImageTask();
+            uploadTask.execute(imageUri);
         }
     }
 
+    private class UploadImageTask extends AsyncTask<Uri, Integer, Integer> {
+
+        private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
+        private final OkHttpClient client = new OkHttpClient();
+        protected Integer doInBackground(Uri... uris) {
+
+            File sourceFile = new File(uris[0].getPath());
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("uploaded_file", sourceFile.getName(), RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
+                    .addFormDataPart("user-id", "atest")
+
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("http://uq.maio.cz/inbox")
+                    .post(requestBody)
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                System.out.println(response.body().string());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return 0;
+        }
+
+
+    }
 
 
     @Override
