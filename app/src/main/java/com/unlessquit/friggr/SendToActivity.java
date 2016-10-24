@@ -1,9 +1,13 @@
 package com.unlessquit.friggr;
 
+import android.content.ContentResolver;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -52,8 +56,18 @@ public class SendToActivity extends AppCompatActivity {
                 handleSendImage(intent); // Handle single image being sent
             }
         }
-
     }
+
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        // startManagingCursor(cursor);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
+
 
     void handleSendImage(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
@@ -62,17 +76,17 @@ public class SendToActivity extends AppCompatActivity {
             Toast toast = Toast.makeText(getApplicationContext(), "Image file: " + imageUri.getPath(), duration);
             toast.show();
             UploadImageTask uploadTask = new UploadImageTask();
-            uploadTask.execute(imageUri);
+            uploadTask.execute(getPath(imageUri));
         }
     }
 
-    private class UploadImageTask extends AsyncTask<Uri, Integer, Integer> {
+    private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
 
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
-        protected Integer doInBackground(Uri... uris) {
+        protected Integer doInBackground(String... paths) {
 
-            File sourceFile = new File(uris[0].getPath());
+            File sourceFile = new File(paths[0]);
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("uploaded_file", sourceFile.getName(), RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
@@ -94,8 +108,6 @@ public class SendToActivity extends AppCompatActivity {
 
             return 0;
         }
-
-
     }
 
 
