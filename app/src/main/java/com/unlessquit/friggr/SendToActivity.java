@@ -55,7 +55,7 @@ public class SendToActivity extends AppCompatActivity {
         String type = intent.getType();
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
-            verifyStoragePermissions(getParent());
+            verifyStoragePermissions(this);
             if (type.startsWith("image/")) {
                 handleSendImage(intent); // Handle single image being sent
             }
