@@ -15,6 +15,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -89,6 +90,7 @@ public class SendToActivity extends AppCompatActivity {
         }
     }
     public String getPath(Uri uri) {
+        Log.d("FRIGGR", uri.toString());
         String[] projection = {MediaStore.Images.Media.DATA};
         CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
         Cursor cursor = loader.loadInBackground();
@@ -101,12 +103,21 @@ public class SendToActivity extends AppCompatActivity {
 
     void handleSendImage(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (imageUri == null) {
+            String stringUri = intent.getStringExtra("stringUri"); //just for adb parameter support, -e stringUri "content://media/external/images/media/12"
+            if(stringUri != null){
+                imageUri = Uri.parse(stringUri);
+
+            }
+        }
         if (imageUri != null) {
             int duration = Toast.LENGTH_LONG;
             Toast toast = Toast.makeText(getApplicationContext(), "Image file: " + imageUri.getPath(), duration);
             toast.show();
             UploadImageTask uploadTask = new UploadImageTask();
             uploadTask.execute(getPath(imageUri));
+        } else {
+            Log.e("FRIGGR", "Can't get Uri from received intent");
         }
     }
 
