@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
-        android:text="Name"
+        android:text="atest"
         android:ems="10"
         android:id="@+id/user_id"
         android:layout_alignParentEnd="true" />
@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:srcCompat="@color/colorAccent"
-        android:id="@+id/imageView"
+        android:id="@+id/imagePreview"
         android:adjustViewBounds="false"
         android:minHeight="159dp"
         android:minWidth="50dp"

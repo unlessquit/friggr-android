@@ -19,7 +19,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SendToActivity extends AppCompatActivity {
+    private Uri imageUri = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +46,15 @@ public class SendToActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Log.d("FRIGGR", "Sending image");
+                if (imageUri == null) {
+                    Snackbar.make(view, "Choose image to send", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                } else {
+                    Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
+                    UploadImageTask uploadTask = new UploadImageTask();
+                    uploadTask.execute(getPath(imageUri));
+                }
             }
         });
 
@@ -55,23 +64,38 @@ public class SendToActivity extends AppCompatActivity {
         String action = intent.getAction();
         String type = intent.getType();
 
+        imageUri = getUriFromIntent(intent);
+
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             verifyStoragePermissions(this);
             if (type.startsWith("image/")) {
-                handleSendImage(intent); // Handle single image being sent
+                setImageView(intent);
             }
         }
     }
+
+    private void setImageView(Intent intent) {
+        Uri image = getUriFromIntent(intent);
+        final ViewGroup viewGroup = (ViewGroup) ((ViewGroup) this
+                .findViewById(android.R.id.content)).getChildAt(0);
+        Snackbar.make(viewGroup, image.getPath(), Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+        ImageView mImageView;
+        mImageView = (ImageView) findViewById(R.id.imagePreview);
+        mImageView.setImageURI(image);
+
+    }
+
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-           // Manifest.permission.WRITE_EXTERNAL_STORAGE
+            // Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     /**
      * Checks if the app has permission to write to device storage
-     *
+     * <p>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
@@ -89,6 +113,7 @@ public class SendToActivity extends AppCompatActivity {
             );
         }
     }
+
     public String getPath(Uri uri) {
         Log.d("FRIGGR", uri.toString());
         String[] projection = {MediaStore.Images.Media.DATA};
@@ -100,25 +125,15 @@ public class SendToActivity extends AppCompatActivity {
         return cursor.getString(column_index);
     }
 
-
-    void handleSendImage(Intent intent) {
+    Uri getUriFromIntent(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        if (imageUri == null) {
-            String stringUri = intent.getStringExtra("stringUri"); //just for adb parameter support, -e stringUri "content://media/external/images/media/12"
-            if(stringUri != null){
-                imageUri = Uri.parse(stringUri);
-
-            }
-        }
         if (imageUri != null) {
-            int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(getApplicationContext(), "Image file: " + imageUri.getPath(), duration);
-            toast.show();
-            UploadImageTask uploadTask = new UploadImageTask();
-            uploadTask.execute(getPath(imageUri));
-        } else {
-            Log.e("FRIGGR", "Can't get Uri from received intent");
+            return imageUri;
         }
+        String stringUri = intent.getStringExtra("stringUri");
+        if (stringUri == null) return null;
+        Uri testImageUri = Uri.parse(stringUri); //just for adb parameter support, -e stringUri "content://media/external/images/media/12"
+        return testImageUri;
     }
 
     private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
@@ -127,7 +142,7 @@ public class SendToActivity extends AppCompatActivity {
         private final OkHttpClient client = new OkHttpClient();
 
         protected Integer doInBackground(String... paths) {
-
+            Log.d("FRIGGR", "Building multipart POST request");
             File sourceFile = new File(paths[0]);
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
