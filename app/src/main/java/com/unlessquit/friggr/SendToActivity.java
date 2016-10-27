@@ -58,7 +58,6 @@ public class SendToActivity extends AppCompatActivity {
             }
         });
 
-
         // https://developer.android.com/training/sharing/receive.html
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -83,14 +82,12 @@ public class SendToActivity extends AppCompatActivity {
         ImageView mImageView;
         mImageView = (ImageView) findViewById(R.id.imagePreview);
         mImageView.setImageURI(image);
-
     }
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            // Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE
     };
 
     /**
@@ -119,7 +116,6 @@ public class SendToActivity extends AppCompatActivity {
         String[] projection = {MediaStore.Images.Media.DATA};
         CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
         Cursor cursor = loader.loadInBackground();
-        // startManagingCursor(cursor);
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
@@ -137,7 +133,6 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
-
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
 
@@ -166,7 +161,6 @@ public class SendToActivity extends AppCompatActivity {
             return 0;
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
