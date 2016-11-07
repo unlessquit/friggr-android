@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,9 +52,11 @@ public class SendToActivity extends AppCompatActivity {
                     Snackbar.make(view, "Choose image to send", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 } else {
+                    TextView userIdInput = (TextView) findViewById(R.id.user_id);
+                    String userId = userIdInput.getText().toString();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
                     UploadImageTask uploadTask = new UploadImageTask();
-                    uploadTask.execute(getPath(imageUri));
+                    uploadTask.execute(userId, getPath(imageUri));
                 }
             }
         });
@@ -136,14 +139,15 @@ public class SendToActivity extends AppCompatActivity {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
 
-        protected Integer doInBackground(String... paths) {
+        protected Integer doInBackground(String... params) {
             Log.d("FRIGGR", "Building multipart POST request");
-            File sourceFile = new File(paths[0]);
+            String userId = params[0];
+            File sourceFile = new File(params[1]);
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("photoFile", sourceFile.getName(),
                             RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
-                    .addFormDataPart("userId", "test")
+                    .addFormDataPart("userId", userId)
                     .build();
 
             Request request = new Request.Builder()
