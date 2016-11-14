@@ -184,7 +184,7 @@ public class SendToActivity extends AppCompatActivity {
         }
 
         protected void onPreExecute() {
-            Snackbar.make(snackParentView, "Initiating image upload...", Snackbar.LENGTH_LONG)
+            Snackbar.make(snackParentView, "Uploading photo...", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Action", null).show();
         }
 
