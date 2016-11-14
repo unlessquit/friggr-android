@@ -35,6 +35,8 @@ import okhttp3.Response;
 
 public class SendToActivity extends AppCompatActivity {
     private Uri imageUri = null;
+    private View snackParentView = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,8 @@ public class SendToActivity extends AppCompatActivity {
         setContentView(R.layout.activity_send_to);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        snackParentView = this.findViewById(android.R.id.content);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -80,8 +84,7 @@ public class SendToActivity extends AppCompatActivity {
         Uri image = getUriFromIntent(intent);
         final ViewGroup viewGroup = (ViewGroup) ((ViewGroup) this
                 .findViewById(android.R.id.content)).getChildAt(0);
-        Snackbar.make(viewGroup, image.getPath(), Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        Log.d("FRIGGR", "Image path: " + image.getPath());
         ImageView mImageView;
         mImageView = (ImageView) findViewById(R.id.imagePreview);
         mImageView.setImageURI(image);
@@ -156,14 +159,36 @@ public class SendToActivity extends AppCompatActivity {
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+
                 Log.d("FRIGGR", "Photo has been uploaded");
+                return 0;
+
             } catch (IOException e) {
                 e.printStackTrace();
+                return 1;
             }
 
-            return 0;
         }
+
+        protected void onPreExecute() {
+            Snackbar.make(snackParentView, "Initiating image upload...", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
+
+        protected void onPostExecute(Integer result) {
+            if (result != 0) {
+                Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                return;
+            }
+
+            Snackbar.make(snackParentView, "Photo was successfully uploaded!", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
+
     }
 
     @Override
