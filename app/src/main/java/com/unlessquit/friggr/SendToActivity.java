@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -36,6 +37,7 @@ import okhttp3.Response;
 public class SendToActivity extends AppCompatActivity {
     private Uri imageUri = null;
     private View snackParentView = null;
+    private SharedPreferences settings;
 
 
     @Override
@@ -46,6 +48,12 @@ public class SendToActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         snackParentView = this.findViewById(android.R.id.content);
+
+        settings = getPreferences(MODE_PRIVATE);
+        String userId = settings.getString("userId", "test");
+        Log.d("FRIGGR", "userId settings value: " + userId);
+        ((TextView) findViewById(R.id.user_id)).setText(userId);
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -58,6 +66,8 @@ public class SendToActivity extends AppCompatActivity {
                 } else {
                     TextView userIdInput = (TextView) findViewById(R.id.user_id);
                     String userId = userIdInput.getText().toString();
+                    Log.d("FRIGGR", "Saving userId to settings: " + userId);
+                    settings.edit().putString("userId", userId).commit();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
                     UploadImageTask uploadTask = new UploadImageTask();
                     uploadTask.execute(userId, getPath(imageUri));
