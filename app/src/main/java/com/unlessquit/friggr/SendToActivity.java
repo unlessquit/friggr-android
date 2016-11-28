@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,6 +24,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,8 +74,9 @@ public class SendToActivity extends AppCompatActivity {
                     Log.d("FRIGGR", "Saving userId to settings: " + userId);
                     settings.edit().putString("userId", userId).commit();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
-                    UploadImageTask uploadTask = new UploadImageTask();
-                    uploadTask.execute(userId, getPath(imageUri));
+                    downsizeImage(1980, 1080, imageUri.toString());
+//                    UploadImageTask uploadTask = new UploadImageTask();
+//                    uploadTask.execute(userId, getPath(imageUri));
                 }
             }
         });
@@ -148,18 +154,36 @@ public class SendToActivity extends AppCompatActivity {
         return testImageUri;
     }
 
-    private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
+
+        private void downsizeImage(int x, int y, String imageUri) {
+            Glide.with(getApplicationContext()).load(imageUri)
+                    .asBitmap()
+                    .toBytes()
+                    .override(x, y)
+                    .into(new SimpleTarget<byte[]>(x, y) {
+                        @Override
+                        public void onResourceReady(byte[] data, GlideAnimation anim) {
+                            Log.d("FRIGGR", "Image downsized, lets upload it");
+                            UploadImageTask uploadTask = new UploadImageTask();
+                            uploadTask.execute(data);
+                        }
+                    });
+        }
+
+
+    private class UploadImageTask extends AsyncTask<byte[], Void, Integer> {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
 
-        protected Integer doInBackground(String... params) {
+
+
+        protected Integer doInBackground(byte[]... data) {
             Log.d("FRIGGR", "Building multipart POST request");
-            String userId = params[0];
-            File sourceFile = new File(params[1]);
+            String userId = settings.getString("userId", "test");
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
-                    .addFormDataPart("photoFile", sourceFile.getName(),
-                            RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
+                    .addFormDataPart("photoFile", "fileUpload.jpg",
+                            RequestBody.create(MEDIA_TYPE_JPG, data[0]))
                     .addFormDataPart("userId", userId)
                     .build();
 
