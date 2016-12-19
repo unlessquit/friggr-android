@@ -74,7 +74,8 @@ public class SendToActivity extends AppCompatActivity {
                     Log.d("FRIGGR", "Saving userId to settings: " + userId);
                     settings.edit().putString("userId", userId).commit();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
-                    downsizeImage(1980, 1080, imageUri.toString());
+
+                    downsizeImage(imageUri.toString());
 //                    UploadImageTask uploadTask = new UploadImageTask();
 //                    uploadTask.execute(userId, getPath(imageUri));
                 }
@@ -155,11 +156,13 @@ public class SendToActivity extends AppCompatActivity {
     }
 
 
-        private void downsizeImage(int x, int y, String imageUri) {
+        private void downsizeImage(String imageUri) {
+            int x = settings.getInt("downsize_longer", 2000);
+            int y = x*2/3;
             Glide.with(getApplicationContext()).load(imageUri)
                     .asBitmap()
                     .toBytes()
-                    .override(x, y)
+                    .override(x, y).atMost()
                     .into(new SimpleTarget<byte[]>(x, y) {
                         @Override
                         public void onResourceReady(byte[] data, GlideAnimation anim) {
@@ -241,6 +244,7 @@ public class SendToActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
 
