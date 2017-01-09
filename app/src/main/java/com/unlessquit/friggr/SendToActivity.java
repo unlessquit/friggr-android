@@ -2,6 +2,7 @@ package com.unlessquit.friggr;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,8 +25,23 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -33,6 +49,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
+import static java.util.Arrays.*;
 
 public class SendToActivity extends AppCompatActivity {
     private Uri imageUri = null;
@@ -53,6 +71,9 @@ public class SendToActivity extends AppCompatActivity {
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);
         ((TextView) findViewById(R.id.user_id)).setText(userId);
+
+        ((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
+
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -148,6 +169,79 @@ public class SendToActivity extends AppCompatActivity {
         return testImageUri;
     }
 
+    private UploadLog createLogItem(String pictureName, String uploadResult) {
+        UploadLog ul = new UploadLog();
+        ul.fileName = pictureName;
+
+        //http://stackoverflow.com/questions/8745297/want-current-date-and-time-in-dd-mm-yyyy-hhmmss-ss-format
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        String strDate = sdf.format(cal.getTime());
+
+        ul.uploadDate = strDate;
+
+        ul.uploadStatus = uploadResult;
+        return ul;
+    }
+
+    private void writeUploadLogToJSON(String pictureName, Boolean success) {
+        String FILENAME = "filesUpload.log";
+        String uploadResult = "FAILED";
+        if (success) {
+            uploadResult = "SUCCESS";
+        }
+        ArrayList currentLog = readUploadLogFromJSON();
+        File file = new File(pictureName);
+        currentLog.add(0, createLogItem(file.getName(), uploadResult));
+
+        try {
+            FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos));
+
+            Gson gson = new Gson();
+            // convert list to array
+            ArrayList al = new ArrayList<UploadLog>(currentLog);
+            gson.toJson(al.toArray(), writer);
+            writer.close();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return;
+    }
+
+    private ArrayList<UploadLog> readUploadLogFromJSON() {
+        String FILENAME = "filesUpload.log";
+        ArrayList<UploadLog> emptyList = new ArrayList();
+        emptyList.add(0, createLogItem("No image uploaded yet", ""));
+
+
+        try {
+            FileInputStream fis = openFileInput(FILENAME);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+
+            Gson gson = new Gson();
+            UploadLog[] log = gson.fromJson(reader, UploadLog[].class);
+            reader.close();
+            fis.close();
+            ArrayList<UploadLog> logList = new ArrayList<UploadLog>(asList(log));
+
+            if(logList.size() == 0) {
+                return emptyList;
+            }
+
+            return logList;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return emptyList;
+    }
+
     private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client = new OkHttpClient();
@@ -172,16 +266,19 @@ public class SendToActivity extends AppCompatActivity {
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
                 }
-
+                writeUploadLogToJSON(params[1], true);
                 Log.d("FRIGGR", "Photo has been uploaded");
+
                 return 0;
 
             } catch (IOException e) {
+                writeUploadLogToJSON(params[1], false);
                 e.printStackTrace();
                 return 1;
             }
 
         }
+
 
         protected void onPreExecute() {
             Snackbar.make(snackParentView, "Uploading photo...", Snackbar.LENGTH_INDEFINITE)
@@ -189,6 +286,7 @@ public class SendToActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Integer result) {
+            ((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
             if (result != 0) {
                 Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
