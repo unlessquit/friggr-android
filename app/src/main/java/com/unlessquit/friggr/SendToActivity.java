@@ -72,6 +72,7 @@ public class SendToActivity extends AppCompatActivity {
         Log.d("FRIGGR", "userId settings value: " + userId);
         ((TextView) findViewById(R.id.user_id)).setText(userId);
 
+
         ((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
 
 
@@ -269,6 +270,7 @@ public class SendToActivity extends AppCompatActivity {
                 writeUploadLogToJSON(params[1], true);
                 Log.d("FRIGGR", "Photo has been uploaded");
 
+
                 return 0;
 
             } catch (IOException e) {
@@ -290,11 +292,13 @@ public class SendToActivity extends AppCompatActivity {
             if (result != 0) {
                 Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                ((ImageView)findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent_failed);
                 return;
             }
 
             Snackbar.make(snackParentView, "Photo was successfully uploaded!", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
+            ((ImageView)findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent);
         }
 
     }
