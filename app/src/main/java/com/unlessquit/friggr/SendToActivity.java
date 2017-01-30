@@ -73,7 +73,7 @@ public class SendToActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.user_id)).setText(userId);
 
 
-        ((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
+        //((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
 
 
 
@@ -86,13 +86,13 @@ public class SendToActivity extends AppCompatActivity {
                     Snackbar.make(view, "Choose image to send", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 } else {
-                    TextView userIdInput = (TextView) findViewById(R.id.user_id);
-                    String userId = userIdInput.getText().toString();
+                    String userId = ((TextView) findViewById(R.id.user_id)).getText().toString();
+                    String description = ((TextView) findViewById(R.id.captionText)).getText().toString();
                     Log.d("FRIGGR", "Saving userId to settings: " + userId);
                     settings.edit().putString("userId", userId).commit();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
                     UploadImageTask uploadTask = new UploadImageTask();
-                    uploadTask.execute(userId, getPath(imageUri));
+                    uploadTask.execute(userId, getPath(imageUri), description);
                 }
             }
         });
@@ -256,6 +256,7 @@ public class SendToActivity extends AppCompatActivity {
                     .addFormDataPart("photoFile", sourceFile.getName(),
                             RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
                     .addFormDataPart("userId", userId)
+                    .addFormDataPart("description", params[2])
                     .build();
 
             Request request = new Request.Builder()
@@ -288,7 +289,7 @@ public class SendToActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Integer result) {
-            ((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
+            //((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
             if (result != 0) {
                 Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
