@@ -256,7 +256,7 @@ public class SendToActivity extends AppCompatActivity {
                     .addFormDataPart("photoFile", sourceFile.getName(),
                             RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
                     .addFormDataPart("userId", userId)
-                    .addFormDataPart("description", params[2])
+                    .addFormDataPart("caption", params[2])
                     .build();
 
             Request request = new Request.Builder()

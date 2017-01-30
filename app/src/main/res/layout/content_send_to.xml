@@ -24,7 +24,18 @@
             android:text="test"
             android:ems="10"
             android:id="@+id/user_id"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentEnd="true"
+            android:hint="User ID" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/captionText"
+            android:hint="Caption"
+            android:layout_below="@+id/user_id"
+            android:layout_alignParentStart="true" />
 
         <ImageView
             android:layout_width="match_parent"
@@ -34,9 +45,9 @@
             android:adjustViewBounds="false"
             android:minHeight="159dp"
             android:minWidth="50dp"
-            android:layout_below="@+id/user_id"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="14dp" />
+            android:layout_marginTop="33dp"
+            android:layout_below="@+id/captionText"
+            android:layout_alignParentStart="true" />
 
         <ImageView
             android:layout_width="match_parent"
@@ -46,17 +57,6 @@
             android:layout_above="@+id/imagePreview"
             android:layout_alignBottom="@+id/imagePreview"
             android:layout_alignRight="@+id/imagePreview" />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:text="Caption"
-            android:ems="10"
-            android:id="@+id/captionText"
-            android:layout_below="@+id/status_Image"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="61dp" />
 
     </RelativeLayout>
 
