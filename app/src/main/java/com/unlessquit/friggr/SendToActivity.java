@@ -65,15 +65,12 @@ public class SendToActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        snackParentView = this.findViewById(android.R.id.content);
+        snackParentView = findViewById(android.R.id.content);
 
         settings = getPreferences(MODE_PRIVATE);
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);
         ((TextView) findViewById(R.id.user_id)).setText(userId);
-
-
-        //((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
 
 
 
@@ -92,7 +89,7 @@ public class SendToActivity extends AppCompatActivity {
                     settings.edit().putString("userId", userId).commit();
                     Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
                     UploadImageTask uploadTask = new UploadImageTask();
-                    uploadTask.execute(userId, getPath(imageUri), description);
+                    uploadTask.execute(userId, HelperFunctions.getPath(imageUri, getApplicationContext()), description);
                 }
             }
         });
@@ -102,10 +99,10 @@ public class SendToActivity extends AppCompatActivity {
         String action = intent.getAction();
         String type = intent.getType();
 
-        imageUri = getUriFromIntent(intent);
+        imageUri = HelperFunctions.getUriFromIntent(intent);
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
-            verifyStoragePermissions(this);
+            HelperFunctions.verifyStoragePermissions(this);
             if (type.startsWith("image/")) {
                 setImageView(intent);
             }
@@ -113,135 +110,11 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     private void setImageView(Intent intent) {
-        Uri image = getUriFromIntent(intent);
-        final ViewGroup viewGroup = (ViewGroup) ((ViewGroup) this
-                .findViewById(android.R.id.content)).getChildAt(0);
+        Uri image = HelperFunctions.getUriFromIntent(intent);
         Log.d("FRIGGR", "Image path: " + image.getPath());
-        ImageView mImageView;
-        mImageView = (ImageView) findViewById(R.id.imagePreview);
-        mImageView.setImageURI(image);
+        ((ImageView) findViewById(R.id.imagePreview)).setImageURI(image);
     }
 
-    // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-    };
-
-    /**
-     * Checks if the app has permission to write to device storage
-     * <p>
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     * @param activity
-     */
-    public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have read permission
-        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
-
-    public String getPath(Uri uri) {
-        Log.d("FRIGGR", uri.toString());
-        String[] projection = {MediaStore.Images.Media.DATA};
-        CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        return cursor.getString(column_index);
-    }
-
-    Uri getUriFromIntent(Intent intent) {
-        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        if (imageUri != null) {
-            return imageUri;
-        }
-        String stringUri = intent.getStringExtra("stringUri");
-        if (stringUri == null) return null;
-        Uri testImageUri = Uri.parse(stringUri); //just for adb parameter support, -e stringUri "content://media/external/images/media/12"
-        return testImageUri;
-    }
-
-    private UploadLog createLogItem(String pictureName, String uploadResult) {
-        UploadLog ul = new UploadLog();
-        ul.fileName = pictureName;
-
-        //http://stackoverflow.com/questions/8745297/want-current-date-and-time-in-dd-mm-yyyy-hhmmss-ss-format
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        String strDate = sdf.format(cal.getTime());
-
-        ul.uploadDate = strDate;
-
-        ul.uploadStatus = uploadResult;
-        return ul;
-    }
-
-    private void writeUploadLogToJSON(String pictureName, Boolean success) {
-        String FILENAME = "filesUpload.log";
-        String uploadResult = "FAILED";
-        if (success) {
-            uploadResult = "SUCCESS";
-        }
-        ArrayList currentLog = readUploadLogFromJSON();
-        File file = new File(pictureName);
-        currentLog.add(0, createLogItem(file.getName(), uploadResult));
-
-        try {
-            FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos));
-
-            Gson gson = new Gson();
-            // convert list to array
-            ArrayList al = new ArrayList<UploadLog>(currentLog);
-            gson.toJson(al.toArray(), writer);
-            writer.close();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return;
-    }
-
-    private ArrayList<UploadLog> readUploadLogFromJSON() {
-        String FILENAME = "filesUpload.log";
-        ArrayList<UploadLog> emptyList = new ArrayList();
-        emptyList.add(0, createLogItem("No image uploaded yet", ""));
-
-
-        try {
-            FileInputStream fis = openFileInput(FILENAME);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-
-            Gson gson = new Gson();
-            UploadLog[] log = gson.fromJson(reader, UploadLog[].class);
-            reader.close();
-            fis.close();
-            ArrayList<UploadLog> logList = new ArrayList<UploadLog>(asList(log));
-
-            if(logList.size() == 0) {
-                return emptyList;
-            }
-
-            return logList;
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return emptyList;
-    }
 
     private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
@@ -268,14 +141,12 @@ public class SendToActivity extends AppCompatActivity {
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
                 }
-                writeUploadLogToJSON(params[1], true);
+                UploadLogProcessor.writeUploadLogToJSON(params[1], true, getApplicationContext());
                 Log.d("FRIGGR", "Photo has been uploaded");
-
-
                 return 0;
 
             } catch (IOException e) {
-                writeUploadLogToJSON(params[1], false);
+                UploadLogProcessor.writeUploadLogToJSON(params[1], false, getApplicationContext());
                 e.printStackTrace();
                 return 1;
             }
