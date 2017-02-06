@@ -53,10 +53,7 @@ import okhttp3.Response;
 import static java.util.Arrays.*;
 
 public class SendToActivity extends AppCompatActivity {
-    private Uri imageUri = null;
-    private View snackParentView = null;
     private SharedPreferences settings;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,41 +62,17 @@ public class SendToActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        snackParentView = findViewById(android.R.id.content);
-
         settings = getPreferences(MODE_PRIVATE);
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);
         ((TextView) findViewById(R.id.user_id)).setText(userId);
 
-
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d("FRIGGR", "Sending image");
-                if (imageUri == null) {
-                    Snackbar.make(view, "Choose image to send", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                } else {
-                    String userId = ((TextView) findViewById(R.id.user_id)).getText().toString();
-                    String description = ((TextView) findViewById(R.id.captionText)).getText().toString();
-                    Log.d("FRIGGR", "Saving userId to settings: " + userId);
-                    settings.edit().putString("userId", userId).commit();
-                    Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
-                    UploadImageTask uploadTask = new UploadImageTask();
-                    uploadTask.execute(userId, HelperFunctions.getPath(imageUri, getApplicationContext()), description);
-                }
-            }
-        });
-
+        fab.setOnClickListener(new SendImageListener(this));
         // https://developer.android.com/training/sharing/receive.html
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
-
-        imageUri = HelperFunctions.getUriFromIntent(intent);
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             HelperFunctions.verifyStoragePermissions(this);
@@ -115,65 +88,6 @@ public class SendToActivity extends AppCompatActivity {
         ((ImageView) findViewById(R.id.imagePreview)).setImageURI(image);
     }
 
-
-    private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
-        private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
-        private final OkHttpClient client = new OkHttpClient();
-
-        protected Integer doInBackground(String... params) {
-            Log.d("FRIGGR", "Building multipart POST request");
-            String userId = params[0];
-            File sourceFile = new File(params[1]);
-            RequestBody requestBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("photoFile", sourceFile.getName(),
-                            RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
-                    .addFormDataPart("userId", userId)
-                    .addFormDataPart("caption", params[2])
-                    .build();
-
-            Request request = new Request.Builder()
-                    .url("http://uq.maio.cz/inbox")
-                    .post(requestBody)
-                    .build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
-                }
-                UploadLogProcessor.writeUploadLogToJSON(params[1], true, getApplicationContext());
-                Log.d("FRIGGR", "Photo has been uploaded");
-                return 0;
-
-            } catch (IOException e) {
-                UploadLogProcessor.writeUploadLogToJSON(params[1], false, getApplicationContext());
-                e.printStackTrace();
-                return 1;
-            }
-
-        }
-
-
-        protected void onPreExecute() {
-            Snackbar.make(snackParentView, "Uploading photo...", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("Action", null).show();
-        }
-
-        protected void onPostExecute(Integer result) {
-            //((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
-            if (result != 0) {
-                Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                ((ImageView)findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent_failed);
-                return;
-            }
-
-            Snackbar.make(snackParentView, "Photo was successfully uploaded!", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-            ((ImageView)findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent);
-        }
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
