@@ -69,23 +69,24 @@ public class SendToActivity extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new SendImageListener(this));
+
+        setImagePreview(getIntent());
+
+    }
+
+    private void setImagePreview(Intent intent) {
         // https://developer.android.com/training/sharing/receive.html
-        Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             HelperFunctions.verifyStoragePermissions(this);
             if (type.startsWith("image/")) {
-                setImageView(intent);
+                Uri image = HelperFunctions.getUriFromIntent(intent);
+                Log.d("FRIGGR", "Image path: " + image.getPath());
+                ((ImageView) findViewById(R.id.imagePreview)).setImageURI(image);
             }
         }
-    }
-
-    private void setImageView(Intent intent) {
-        Uri image = HelperFunctions.getUriFromIntent(intent);
-        Log.d("FRIGGR", "Image path: " + image.getPath());
-        ((ImageView) findViewById(R.id.imagePreview)).setImageURI(image);
     }
 
 
