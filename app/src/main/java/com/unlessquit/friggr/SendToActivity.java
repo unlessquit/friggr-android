@@ -62,16 +62,20 @@ public class SendToActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        settings = getPreferences(MODE_PRIVATE);
-        String userId = settings.getString("userId", "test");
-        Log.d("FRIGGR", "userId settings value: " + userId);
-        ((TextView) findViewById(R.id.user_id)).setText(userId);
+        ((TextView) findViewById(R.id.user_id)).setText(loadUserIdFromSettings());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new SendImageListener(this));
 
         setImagePreview(getIntent());
 
+    }
+
+    private String loadUserIdFromSettings() {
+        settings = getPreferences(MODE_PRIVATE);
+        String userId = settings.getString("userId", "test");
+        Log.d("FRIGGR", "userId settings value: " + userId);
+        return userId;
     }
 
     private void setImagePreview(Intent intent) {

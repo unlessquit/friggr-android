@@ -14,7 +14,9 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
+import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -35,6 +37,7 @@ public class SendImageListener implements View.OnClickListener {
 
 
     public SendImageListener(AppCompatActivity app) {
+        this.app = app;
         this.ctx = app.getApplicationContext();
         snackParentView = app.findViewById(android.R.id.content);
         settings = app.getPreferences(app.MODE_PRIVATE);
@@ -50,18 +53,25 @@ public class SendImageListener implements View.OnClickListener {
                     .setAction("Action", null).show();
         } else {
             String userId = ((TextView) app.findViewById(R.id.user_id)).getText().toString();
-            String description = ((TextView) app.findViewById(R.id.captionText)).getText().toString();
+            String caption = ((TextView) app.findViewById(R.id.captionText)).getText().toString();
             Log.d("FRIGGR", "Saving userId to settings: " + userId);
             settings.edit().putString("userId", userId).commit();
             Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
             UploadImageTask uploadTask = new UploadImageTask();
-            uploadTask.execute(userId, HelperFunctions.getPath(imageUri, ctx), description);
+            uploadTask.execute(userId, HelperFunctions.getPath(imageUri, ctx), caption);
         }
     }
 
     private class UploadImageTask extends AsyncTask<String, Integer, Integer> {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
-        private final OkHttpClient client = new OkHttpClient();
+        private final OkHttpClient client;
+
+        UploadImageTask(){
+            ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS).build();
+            client = new OkHttpClient.Builder()
+                    .connectionSpecs(Collections.singletonList(spec))
+                    .build();
+        }
 
         protected Integer doInBackground(String... params) {
             Log.d("FRIGGR", "Building multipart POST request");
@@ -76,7 +86,7 @@ public class SendImageListener implements View.OnClickListener {
                     .build();
 
             Request request = new Request.Builder()
-                    .url("http://uq.maio.cz/inbox")
+                    .url("https://friggr.unlessquit.com/inbox")
                     .post(requestBody)
                     .build();
 
