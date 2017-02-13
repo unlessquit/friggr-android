@@ -67,8 +67,12 @@ public class SendToActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new SendImageListener(this));
 
+    }
+
+    protected void onStart() {
         setImagePreview(getIntent());
 
+        super.onStart();
     }
 
     private String loadUserIdFromSettings() {

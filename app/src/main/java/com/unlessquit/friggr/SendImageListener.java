@@ -75,13 +75,12 @@ public class SendImageListener implements View.OnClickListener {
 
         protected Integer doInBackground(String... params) {
             Log.d("FRIGGR", "Building multipart POST request");
-            String userId = params[0];
             File sourceFile = new File(params[1]);
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("photoFile", sourceFile.getName(),
                             RequestBody.create(MEDIA_TYPE_JPG, sourceFile))
-                    .addFormDataPart("userId", userId)
+                    .addFormDataPart("userId", params[0])
                     .addFormDataPart("caption", params[2])
                     .build();
 
@@ -112,7 +111,6 @@ public class SendImageListener implements View.OnClickListener {
         }
 
         protected void onPostExecute(Integer result) {
-            //((TextView) findViewById(R.id.recentLogItem)).setText(readUploadLogFromJSON().get(0).toString());
             if (result != 0) {
                 Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();

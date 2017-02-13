@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
@@ -58,6 +59,7 @@ public class HelperFunctions {
     /** Extract URI from intent from different application,
      * as ADB cann't add extra_stream parameter,
      * to test it from console, there is a parameter stringUri **/
+    @Nullable
     public static Uri getUriFromIntent(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
