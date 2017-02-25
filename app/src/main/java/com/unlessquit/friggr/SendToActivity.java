@@ -75,7 +75,7 @@ public class SendToActivity extends AppCompatActivity {
         super.onStart();
     }
 
-    private String loadUserIdFromSettings() {
+    public String loadUserIdFromSettings() {
         settings = getPreferences(MODE_PRIVATE);
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);

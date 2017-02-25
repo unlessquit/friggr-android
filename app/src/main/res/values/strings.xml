@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Friggr</string>
     <string name="action_settings">Settings</string>
+
+    <string name="title_activity_view">Friggr</string>
+    <string name="dummy_button">Print this picture</string>
+
+    <string name="title_activity_view_images">Friggr</string>
 </resources>
