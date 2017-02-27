@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -39,8 +40,8 @@ public class SendImageListener implements View.OnClickListener {
     public SendImageListener(AppCompatActivity app) {
         this.app = app;
         this.ctx = app.getApplicationContext();
+        settings =  PreferenceManager.getDefaultSharedPreferences(ctx);
         snackParentView = app.findViewById(android.R.id.content);
-        settings = app.getPreferences(app.MODE_PRIVATE);
     }
 
 
@@ -89,7 +90,8 @@ public class SendImageListener implements View.OnClickListener {
                     .post(requestBody)
                     .build();
 
-            try (Response response = client.newCall(request).execute()) {
+            try {
+                Response response = client.newCall(request).execute();
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
                 }

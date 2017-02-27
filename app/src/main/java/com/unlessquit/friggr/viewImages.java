@@ -2,6 +2,7 @@ package com.unlessquit.friggr;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -107,16 +108,6 @@ public class viewImages extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         webView.setOnTouchListener(new CheckForClickTouchLister());
 
-        webView.loadUrl("https://friggr.unlessquit.com/view/" + loadUserIdFromSettings());
-
-        // Set up the user interaction to manually show or hide the system UI.
-//        mWebView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                toggle();
-//            }
-//        });
-
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
@@ -132,8 +123,14 @@ public class viewImages extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStart(){
+        webView.loadUrl("https://friggr.unlessquit.com/view/" + loadUserIdFromSettings());
+        super.onStart();
+    }
+
     private class CheckForClickTouchLister implements View.OnTouchListener {
-        private final static long MAX_TOUCH_DURATION = 300;
+        private final static long MAX_TOUCH_DURATION = 100;
         private long m_DownTime;
 
         @Override
@@ -161,7 +158,7 @@ public class viewImages extends AppCompatActivity {
     }
 
     public String loadUserIdFromSettings() {
-        settings = getPreferences(MODE_PRIVATE);
+        settings =  PreferenceManager.getDefaultSharedPreferences(this);
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);
         return userId;

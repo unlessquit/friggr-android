@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -58,6 +59,7 @@ public class SendToActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        settings = PreferenceManager.getDefaultSharedPreferences(this);
         setContentView(R.layout.activity_send_to);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -76,7 +78,6 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     public String loadUserIdFromSettings() {
-        settings = getPreferences(MODE_PRIVATE);
         String userId = settings.getString("userId", "test");
         Log.d("FRIGGR", "userId settings value: " + userId);
         return userId;
