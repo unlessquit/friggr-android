@@ -1,6 +1,5 @@
 package com.unlessquit.friggr;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -40,7 +39,7 @@ public class SendImageListener implements View.OnClickListener {
     public SendImageListener(AppCompatActivity app) {
         this.app = app;
         this.ctx = app.getApplicationContext();
-        settings =  PreferenceManager.getDefaultSharedPreferences(ctx);
+        settings = PreferenceManager.getDefaultSharedPreferences(ctx);
         snackParentView = app.findViewById(android.R.id.content);
     }
 
@@ -59,7 +58,13 @@ public class SendImageListener implements View.OnClickListener {
             settings.edit().putString("userId", userId).commit();
             Log.d("FRIGGR", "Image Uri: " + imageUri.toString());
             UploadImageTask uploadTask = new UploadImageTask();
-            uploadTask.execute(userId, HelperFunctions.getPath(imageUri, ctx), caption);
+            String filePath = HelperFunctions.getPath(imageUri, ctx);
+            if (filePath.equals("")) {
+                Snackbar.make(snackParentView, "I have problem to take over the image, please try it again or share it from different application.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                return;
+            }
+            uploadTask.execute(userId, filePath, caption);
         }
     }
 
@@ -67,7 +72,7 @@ public class SendImageListener implements View.OnClickListener {
         private final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
         private final OkHttpClient client;
 
-        UploadImageTask(){
+        UploadImageTask() {
             ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS).build();
             client = new OkHttpClient.Builder()
                     .connectionSpecs(Collections.singletonList(spec))
@@ -76,6 +81,12 @@ public class SendImageListener implements View.OnClickListener {
 
         protected Integer doInBackground(String... params) {
             Log.d("FRIGGR", "Building multipart POST request");
+            if (params[0].equals("") || params[1].equals("")) {
+                Log.d("FRIGGR", "File or userId is empty string: '" + params[1] + "', '" + params[0] + "'");
+
+                return 1;
+            }
+
             File sourceFile = new File(params[1]);
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
@@ -116,13 +127,13 @@ public class SendImageListener implements View.OnClickListener {
             if (result != 0) {
                 Snackbar.make(snackParentView, "Photo has NOT been uploaded", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                ((ImageView)app.findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent_failed);
+                ((ImageView) app.findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent_failed);
                 return;
             }
 
             Snackbar.make(snackParentView, "Photo was successfully uploaded!", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
-            ((ImageView)app.findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent);
+            ((ImageView) app.findViewById(R.id.status_Image)).setImageResource(R.drawable.image_sent);
         }
     }
 

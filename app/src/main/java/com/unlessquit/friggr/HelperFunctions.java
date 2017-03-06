@@ -53,6 +53,9 @@ public class HelperFunctions {
         Cursor cursor = loader.loadInBackground();
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
+        if (cursor.getCount() == 0) {
+            return "";
+        }
         return cursor.getString(column_index);
     }
 
