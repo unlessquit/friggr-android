@@ -115,6 +115,8 @@ public class SendToActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Log.d("FRIGGR", "Settings menu item pressed from sendToActivity");
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
 
